@@ -29,7 +29,8 @@ def setup_database():
         channel VARCHAR(255),
         headline TEXT,
         link TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(channel, headline)
     )
     """)
     

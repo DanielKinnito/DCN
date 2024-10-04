@@ -105,3 +105,24 @@ def get_news_for_user(user_id):
     cur.close()
     conn.close()
     return news
+
+async def get_or_create_session(new_session_string=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    if new_session_string:
+        cur.execute("UPDATE telethon_session SET session_string = %s WHERE id = 1", (new_session_string,))
+    else:
+        cur.execute("SELECT session_string FROM telethon_session WHERE id = 1")
+        result = cur.fetchone()
+        if not result:
+            cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (1, '')")
+        
+        cur.execute("SELECT session_string FROM telethon_session WHERE id = 1")
+        result = cur.fetchone()
+        
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return result[0] if result else ''

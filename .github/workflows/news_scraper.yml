@@ -22,7 +22,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Run main script
+    - name: Set up database
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: python database_setup.py
+    
+    - name: Run news scraper
+      env:
+        API_ID: ${{ secrets.API_ID }}
+        API_HASH: ${{ secrets.API_HASH }}
+        PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: python telegram_scraper.py
+    
+    - name: Run main bot script
       env:
         API_ID: ${{ secrets.API_ID }}
         API_HASH: ${{ secrets.API_HASH }}

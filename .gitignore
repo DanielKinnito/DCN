@@ -1,0 +1,7 @@
+/.env
+/bot.session
+/bot_session.session
+/news_scraper_session.session
+/user_session.session
+/venv
+/__pycache__

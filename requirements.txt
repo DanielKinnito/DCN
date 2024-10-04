@@ -1,0 +1,5 @@
+telethon
+python-dotenv
+psycopg2-binary
+apscheduler
+telegraph

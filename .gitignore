@@ -1,10 +1,6 @@
-/.env
-/bot.session
-/bot_session.session
-/news_scraper_session.session
-/user_session.session
-/venv
-/__pycache__
+# Environment variables
+.env
+
 # Python cache files
 __pycache__/
 *.py[cod]
@@ -15,12 +11,6 @@ venv/
 env/
 .venv/
 .env/
-
-# Environment variables
-.env
-
-# Telethon session files
-*.session
 
 # IDE specific files
 .vscode/
@@ -146,3 +136,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Telethon session files (keep this line for safety)
+*.session
+
+# Local login script (if you decide to keep it in the repo)
+local_login.py

@@ -1,8 +1,6 @@
 import os
-from telethon import TelegramClient, functions
+from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.functions.messages import GetHistoryRequest
-from telethon.tl.functions.channels import CreateChannelRequest
 from dotenv import load_dotenv
 from database import store_news_items, create_tables, get_or_create_session
 import asyncio
@@ -11,26 +9,28 @@ load_dotenv()
 
 API_ID = os.getenv('API_ID')
 API_HASH = os.getenv('API_HASH')
-PHONE_NUMBER = os.getenv('PHONE_NUMBER')
-SCRAPE_LIMIT = 10  # Adjust this value as needed
+SCRAPE_LIMIT = 10
 
 async def main():
+    print("Retrieving session from database...")
     session_string = await get_or_create_session()
+    print("Session retrieved.")
+
+    print("Starting Telegram client...")
     client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
-    
-    await client.start(phone=PHONE_NUMBER)
-    print("Client Created")
-    
-    # Save the session string back to the database
-    await get_or_create_session(client.session.save())
-    
-    # Ensure database tables are created
+    await client.start()
+    print("Telegram client started.")
+
+    print("Ensuring database tables are created...")
     create_tables()
-    
-    # Scrape and store news
+    print("Database tables created/verified.")
+
+    print("Scraping and storing news...")
     await scrape_all_channels(client)
-    
+    print("News scraping completed.")
+
     await client.disconnect()
+    print("Telegram client disconnected.")
 
 async def scrape_all_channels(client):
     channels = get_channels_from_file()

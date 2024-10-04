@@ -1,4 +1,4 @@
-name: News Scraper
+name: News Scraper and Bot
 
 on:
   schedule:
@@ -22,20 +22,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Run database setup
-      env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: python database_setup.py
-    
-    - name: Run news scraper
-      env:
-        API_ID: ${{ secrets.API_ID }}
-        API_HASH: ${{ secrets.API_HASH }}
-        PHONE_NUMBER: ${{ secrets.PHONE_NUMBER }}
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: python news_scraper.py
-    
-    - name: Run bot update
+    - name: Run main script
       env:
         API_ID: ${{ secrets.API_ID }}
         API_HASH: ${{ secrets.API_HASH }}

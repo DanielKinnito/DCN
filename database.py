@@ -7,6 +7,40 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
+def create_tables():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT UNIQUE NOT NULL
+    )
+    """)
+    
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_preferences (
+        user_id INTEGER REFERENCES users(id),
+        channel VARCHAR(255),
+        PRIMARY KEY (user_id, channel)
+    )
+    """)
+    
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS news_items (
+        id SERIAL PRIMARY KEY,
+        channel VARCHAR(255),
+        headline TEXT,
+        link TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(channel, headline)
+    )
+    """)
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def get_all_news_channels():
     conn = get_db_connection()
     cur = conn.cursor()

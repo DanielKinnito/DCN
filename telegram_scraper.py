@@ -39,14 +39,15 @@ async def get_session_from_database():
 async def get_or_create_aggregator_channel(client):
     try:
         channel = await client.get_entity(AGGREGATOR_CHANNEL_NAME)
+        print(f"Channel {AGGREGATOR_CHANNEL_NAME} found.")
+        return channel
     except ValueError:
         print(f"Channel {AGGREGATOR_CHANNEL_NAME} not found. Creating it...")
         channel = await client(CreateChannelRequest(
             title=AGGREGATOR_CHANNEL_NAME,
             about="News aggregator channel"
         ))
-        channel = channel.chats[0]
-    return channel
+        return channel.chats[0]
 
 async def ensure_joined_channels(client, channels):
     for channel_link in channels:
@@ -71,11 +72,15 @@ async def scrape_aggregator_channel(client, aggregator_channel):
     clear_scraped_news()  # Clear existing entries before scraping
     messages = await client.get_messages(aggregator_channel, limit=SCRAPE_LIMIT)
     for message in messages:
+        image_url = None
+        if message.photo:
+            image_url = await client.download_media(message.photo, file=bytes)
         store_scraped_news(
-            channel_id=str(aggregator_channel.id),
+            channel_name=aggregator_channel.title,
             message_id=message.id,
             date=message.date,
-            text=message.text
+            text=message.text,
+            image_url=image_url
         )
     print(f"Scraped {len(messages)} messages from aggregator channel")
 

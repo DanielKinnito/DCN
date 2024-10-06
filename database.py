@@ -154,3 +154,36 @@ def store_scraped_news(channel_name, message_id, date, text, image_url):
     conn.commit()
     cur.close()
     conn.close()
+
+def get_news_for_channels():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT channel_name, text, image_url, date FROM scraped_news ORDER BY date DESC")
+    news = cur.fetchall()
+    cur.close()
+    conn.close()
+    return news
+
+def get_all_channels():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT channel_name FROM scraped_news")
+    channels = [row[0] for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return channels
+
+def get_or_create_session():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
+    result = cur.fetchone()
+    if result:
+        session_string = result[0]
+    else:
+        session_string = StringSession.generate()
+        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s)", (session_string,))
+        conn.commit()
+    cur.close()
+    conn.close()
+    return StringSession(session_string)

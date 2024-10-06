@@ -36,19 +36,15 @@ async def get_session_from_database():
     else:
         raise Exception("No session found in the database. Please run local_login.py first.")
 
-async def get_or_create_aggregator_channel(client):
+async def get_aggregator_channel(client):
     try:
         channel = await client.get_entity(AGGREGATOR_CHANNEL_NAME)
         print(f"Channel {AGGREGATOR_CHANNEL_NAME} found.")
         return channel
     except ValueError:
-        print(f"Channel {AGGREGATOR_CHANNEL_NAME} not found. Creating it...")
-        channel = await client(CreateChannelRequest(
-            title=AGGREGATOR_CHANNEL_NAME,
-            about="News aggregator channel"
-        ))
-        return channel.chats[0]
-#
+        print(f"Channel {AGGREGATOR_CHANNEL_NAME} not found. Please create it manually and add the bot as an admin.")
+        return None
+
 async def ensure_joined_channels(client, channels):
     for channel_link in channels:
         try:
@@ -101,10 +97,14 @@ async def main():
     print("Client started successfully")
 
     channels = read_channels_from_file()
-    aggregator_channel = await get_or_create_aggregator_channel(client)
-    await ensure_joined_channels(client, channels)
-    await forward_messages_to_aggregator(client, aggregator_channel, channels)
-    await scrape_aggregator_channel(client, aggregator_channel)
+    aggregator_channel = await get_aggregator_channel(client)
+    
+    if aggregator_channel:
+        await ensure_joined_channels(client, channels)
+        await forward_messages_to_aggregator(client, aggregator_channel, channels)
+        await scrape_aggregator_channel(client, aggregator_channel)
+    else:
+        print("Aggregator channel not found. Exiting.")
 
     await client.disconnect()
 

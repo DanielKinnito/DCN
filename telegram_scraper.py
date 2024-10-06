@@ -1,12 +1,12 @@
 import os
 from telethon import TelegramClient, events, functions, types
 from telethon.tl.functions.messages import GetHistoryRequest
-from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest
+from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest, JoinChannelRequest
+from telethon.sessions import StringSession
 from dotenv import load_dotenv
-from database import store_scraped_news, create_tables, SCRAPE_LIMIT
 import asyncio
 import psycopg2
-from telethon.sessions import StringSession
+from database import store_scraped_news, create_tables, SCRAPE_LIMIT, clear_scraped_news
 
 load_dotenv()
 
@@ -15,8 +15,14 @@ API_HASH = os.getenv('API_HASH')
 PHONE_NUMBER = os.getenv('PHONE_NUMBER')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
+AGGREGATOR_CHANNEL_NAME = "My News Aggregator"
+
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
+
+def read_channels_from_file():
+    with open('channels.txt', 'r') as file:
+        return [line.strip() for line in file if line.strip()]
 
 async def get_session_from_database():
     conn = get_db_connection()
@@ -30,26 +36,48 @@ async def get_session_from_database():
     else:
         raise Exception("No session found in the database. Please run local_login.py first.")
 
-async def scrape_channels(client):
-    # Add your channel usernames or IDs here
-    channels = ['@channel1', '@channel2', '@channel3']
+async def get_or_create_aggregator_channel(client):
+    try:
+        channel = await client.get_entity(AGGREGATOR_CHANNEL_NAME)
+    except ValueError:
+        print(f"Channel {AGGREGATOR_CHANNEL_NAME} not found. Creating it...")
+        channel = await client(CreateChannelRequest(
+            title=AGGREGATOR_CHANNEL_NAME,
+            about="News aggregator channel"
+        ))
+        channel = channel.chats[0]
+    return channel
 
-    for channel in channels:
-        print(f"Scraping channel: {channel}")
+async def ensure_joined_channels(client, channels):
+    for channel_link in channels:
         try:
-            entity = await client.get_entity(channel)
-            messages = await client.get_messages(entity, limit=SCRAPE_LIMIT)
-            
-            for message in messages:
-                store_scraped_news(
-                    channel_id=str(entity.id),
-                    message_id=message.id,
-                    date=message.date,
-                    text=message.text
-                )
-            print(f"Scraped {len(messages)} messages from {channel}")
+            await client(JoinChannelRequest(channel_link))
+            print(f"Joined channel: {channel_link}")
         except Exception as e:
-            print(f"Error scraping {channel}: {str(e)}")
+            print(f"Failed to join channel {channel_link}: {str(e)}")
+
+async def forward_messages_to_aggregator(client, aggregator_channel, channels):
+    for channel_link in channels:
+        try:
+            from_channel = await client.get_entity(channel_link)
+            messages = await client.get_messages(from_channel, limit=SCRAPE_LIMIT)
+            for message in messages:
+                await client.forward_messages(aggregator_channel, messages=message)
+            print(f"Forwarded messages from {channel_link} to aggregator")
+        except Exception as e:
+            print(f"Error forwarding messages from {channel_link}: {str(e)}")
+
+async def scrape_aggregator_channel(client, aggregator_channel):
+    clear_scraped_news()  # Clear existing entries before scraping
+    messages = await client.get_messages(aggregator_channel, limit=SCRAPE_LIMIT)
+    for message in messages:
+        store_scraped_news(
+            channel_id=str(aggregator_channel.id),
+            message_id=message.id,
+            date=message.date,
+            text=message.text
+        )
+    print(f"Scraped {len(messages)} messages from aggregator channel")
 
 async def main():
     create_tables()
@@ -59,7 +87,11 @@ async def main():
     await client.start()
     print("Client started successfully")
 
-    await scrape_channels(client)
+    channels = read_channels_from_file()
+    aggregator_channel = await get_or_create_aggregator_channel(client)
+    await ensure_joined_channels(client, channels)
+    await forward_messages_to_aggregator(client, aggregator_channel, channels)
+    await scrape_aggregator_channel(client, aggregator_channel)
 
     await client.disconnect()
 

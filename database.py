@@ -12,32 +12,7 @@ def create_tables():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        telegram_id BIGINT UNIQUE NOT NULL
-    )
-    """)
-    
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS user_preferences (
-        user_id INTEGER REFERENCES users(id),
-        channel VARCHAR(255),
-        PRIMARY KEY (user_id, channel)
-    )
-    """)
-    
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS news_items (
-        id SERIAL PRIMARY KEY,
-        channel VARCHAR(255),
-        headline TEXT,
-        link TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(channel, headline)
-    )
-    """)
-    
+    # Create telethon_session table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS telethon_session (
         id SERIAL PRIMARY KEY,
@@ -45,17 +20,31 @@ def create_tables():
     )
     """)
     
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS scraped_news (
-        id SERIAL PRIMARY KEY,
-        channel_name TEXT NOT NULL,
-        message_id INTEGER NOT NULL,
-        date TIMESTAMP NOT NULL,
-        text TEXT,
-        image_url TEXT,
-        UNIQUE(channel_name, message_id)
-    )
-    """)
+    # Check if scraped_news table exists
+    cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'scraped_news')")
+    table_exists = cur.fetchone()[0]
+
+    if table_exists:
+        # Alter existing table
+        cur.execute("""
+        ALTER TABLE scraped_news
+        ADD COLUMN IF NOT EXISTS channel_name TEXT,
+        ADD COLUMN IF NOT EXISTS image_url TEXT,
+        DROP COLUMN IF EXISTS channel_id
+        """)
+    else:
+        # Create new table
+        cur.execute("""
+        CREATE TABLE scraped_news (
+            id SERIAL PRIMARY KEY,
+            channel_name TEXT NOT NULL,
+            message_id INTEGER NOT NULL,
+            date TIMESTAMP NOT NULL,
+            text TEXT,
+            image_url TEXT,
+            UNIQUE(channel_name, message_id)
+        )
+        """)
     
     conn.commit()
     cur.close()

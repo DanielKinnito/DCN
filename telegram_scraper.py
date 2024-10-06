@@ -75,11 +75,12 @@ async def scrape_aggregator_channel(client, aggregator_channel):
         image_url = None
         if message.photo:
             image_url = await client.download_media(message.photo, file=bytes)
+        text = message.text if message.text else ""
         store_scraped_news(
             channel_name=aggregator_channel.title,
             message_id=message.id,
             date=message.date,
-            text=message.text,
+            text=text,
             image_url=image_url
         )
     print(f"Scraped {len(messages)} messages from aggregator channel")

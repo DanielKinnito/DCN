@@ -3,7 +3,7 @@ from telethon import TelegramClient, events, functions, types
 from telethon.tl.functions.messages import GetHistoryRequest
 from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest
 from dotenv import load_dotenv
-from database import store_scraped_news, SCRAPE_LIMIT, create_tables
+from database import store_scraped_news, create_tables, SCRAPE_LIMIT
 import asyncio
 import psycopg2
 from telethon.sessions import StringSession

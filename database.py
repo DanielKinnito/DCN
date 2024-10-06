@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 
 DATABASE_URL = os.getenv('DATABASE_URL')
+SCRAPE_LIMIT = 100  # Define SCRAPE_LIMIT here
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)

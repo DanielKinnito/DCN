@@ -1,8 +1,13 @@
 import asyncio
+import os
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from database import create_tables, get_news_for_channels, get_all_channels, get_or_create_bot_session
-from config import API_ID, API_HASH, BOT_TOKEN
+
+# Get credentials from environment variables
+API_ID = os.getenv('API_ID')
+API_HASH = os.getenv('API_HASH')
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 async def main():
     create_tables()

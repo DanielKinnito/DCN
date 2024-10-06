@@ -44,6 +44,17 @@ def create_tables():
     )
     """)
     
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS scraped_news (
+        id SERIAL PRIMARY KEY,
+        channel_id TEXT NOT NULL,
+        message_id INTEGER NOT NULL,
+        date TIMESTAMP NOT NULL,
+        text TEXT,
+        UNIQUE(channel_id, message_id)
+    )
+    """)
+    
     conn.commit()
     cur.close()
     conn.close()
@@ -136,3 +147,15 @@ async def get_or_create_session(new_session_string=None):
     conn.close()
     
     return session_string if not new_session_string else None
+
+def store_scraped_news(channel_id, message_id, date, text):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+    INSERT INTO scraped_news (channel_id, message_id, date, text)
+    VALUES (%s, %s, %s, %s)
+    ON CONFLICT (channel_id, message_id) DO NOTHING
+    """, (channel_id, message_id, date, text))
+    conn.commit()
+    cur.close()
+    conn.close()

@@ -30,6 +30,27 @@ async def get_session_from_database():
     else:
         raise Exception("No session found in the database. Please run local_login.py first.")
 
+async def scrape_channels(client):
+    # Add your channel usernames or IDs here
+    channels = ['@channel1', '@channel2', '@channel3']
+
+    for channel in channels:
+        print(f"Scraping channel: {channel}")
+        try:
+            entity = await client.get_entity(channel)
+            messages = await client.get_messages(entity, limit=SCRAPE_LIMIT)
+            
+            for message in messages:
+                store_scraped_news(
+                    channel_id=str(entity.id),
+                    message_id=message.id,
+                    date=message.date,
+                    text=message.text
+                )
+            print(f"Scraped {len(messages)} messages from {channel}")
+        except Exception as e:
+            print(f"Error scraping {channel}: {str(e)}")
+
 async def main():
     create_tables()
     session = await get_session_from_database()
@@ -38,9 +59,7 @@ async def main():
     await client.start()
     print("Client started successfully")
 
-    # Your existing scraping logic here
-    # For example:
-    # await scrape_channels(client)
+    await scrape_channels(client)
 
     await client.disconnect()
 

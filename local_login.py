@@ -25,10 +25,8 @@ async def main():
     print("Session string generated.")
     
     print("Saving session string to database...")
-    await get_or_create_session(session_string)
+    get_or_create_session(session_string)
     print("Session string saved to database.")
-    
-    print("Session string saved to database. You can now run the scraper in GitHub Actions.")
     
     await client.disconnect()
 

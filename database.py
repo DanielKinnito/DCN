@@ -40,7 +40,7 @@ def create_tables():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS telethon_session (
         id SERIAL PRIMARY KEY,
-        session_string TEXT
+        session_string TEXT NOT NULL
     )
     """)
     
@@ -117,21 +117,22 @@ async def get_or_create_session(new_session_string=None):
     conn = get_db_connection()
     cur = conn.cursor()
     
-    result = None  # Initialize result to None
-    
     if new_session_string:
-        cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (1, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (new_session_string,))
+        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (new_session_string,))
         conn.commit()
+        print("Session string saved to database.")
     else:
-        cur.execute("SELECT session_string FROM telethon_session WHERE id = 1")
+        cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
         result = cur.fetchone()
         
         if not result:
-            cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (1, '')")
-            conn.commit()
-            result = ('',)
+            print("No session string found in database.")
+            session_string = ''
+        else:
+            print("Session string retrieved from database.")
+            session_string = result[0]
     
     cur.close()
     conn.close()
     
-    return result[0] if result else ''
+    return session_string if not new_session_string else None

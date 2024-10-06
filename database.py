@@ -12,28 +12,21 @@ def create_tables():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Create telethon_session table
+    # Create a version table if it doesn't exist
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS telethon_session (
-        id SERIAL PRIMARY KEY,
-        session_string TEXT NOT NULL
+    CREATE TABLE IF NOT EXISTS schema_version (
+        version INTEGER PRIMARY KEY
     )
     """)
     
-    # Check if scraped_news table exists
-    cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'scraped_news')")
-    table_exists = cur.fetchone()[0]
-
-    if table_exists:
-        # Alter existing table
-        cur.execute("""
-        ALTER TABLE scraped_news
-        ADD COLUMN IF NOT EXISTS channel_name TEXT,
-        ADD COLUMN IF NOT EXISTS image_url TEXT,
-        DROP COLUMN IF EXISTS channel_id
-        """)
-    else:
-        # Create new table
+    # Check current schema version
+    cur.execute("SELECT version FROM schema_version")
+    result = cur.fetchone()
+    current_version = result[0] if result else 0
+    
+    if current_version < 1:
+        # Perform schema updates
+        cur.execute("DROP TABLE IF EXISTS scraped_news")
         cur.execute("""
         CREATE TABLE scraped_news (
             id SERIAL PRIMARY KEY,
@@ -45,6 +38,9 @@ def create_tables():
             UNIQUE(channel_name, message_id)
         )
         """)
+        
+        # Update schema version
+        cur.execute("INSERT INTO schema_version (version) VALUES (1) ON CONFLICT (version) DO UPDATE SET version = 1")
     
     conn.commit()
     cur.close()

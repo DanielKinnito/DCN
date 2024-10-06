@@ -48,7 +48,7 @@ async def get_or_create_aggregator_channel(client):
             about="News aggregator channel"
         ))
         return channel.chats[0]
-
+#
 async def ensure_joined_channels(client, channels):
     for channel_link in channels:
         try:
@@ -74,16 +74,23 @@ async def scrape_aggregator_channel(client, aggregator_channel):
     for message in messages:
         image_url = None
         if message.photo:
-            image_url = await client.download_media(message.photo, file=bytes)
+            try:
+                image_url = await client.download_media(message.photo, file=bytes)
+            except Exception as e:
+                print(f"Error downloading media for message {message.id}: {str(e)}")
         text = message.text if message.text else ""
-        store_scraped_news(
-            channel_name=aggregator_channel.title,
-            message_id=message.id,
-            date=message.date,
-            text=text,
-            image_url=image_url
-        )
-    print(f"Scraped {len(messages)} messages from aggregator channel")
+        try:
+            store_scraped_news(
+                channel_name=aggregator_channel.title,
+                message_id=message.id,
+                date=message.date,
+                text=text,
+                image_url=image_url
+            )
+        except Exception as e:
+            print(f"Error storing message {message.id}: {str(e)}")
+            print(f"Message details: channel_name={aggregator_channel.title}, message_id={message.id}, date={message.date}, text={text[:50]}...")
+    print(f"Attempted to scrape {len(messages)} messages from aggregator channel")
 
 async def main():
     create_tables()

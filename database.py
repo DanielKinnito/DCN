@@ -120,29 +120,20 @@ def get_news_for_user(user_id):
     conn.close()
     return news
 
-async def get_or_create_session(new_session_string=None):
+def get_or_create_session():
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    if new_session_string:
-        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (new_session_string,))
-        conn.commit()
-        print("Session string saved to database.")
+    cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
+    result = cur.fetchone()
+    if result:
+        session_string = result[0]
     else:
-        cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
-        result = cur.fetchone()
-        
-        if not result:
-            print("No session string found in database.")
-            session_string = ''
-        else:
-            print("Session string retrieved from database.")
-            session_string = result[0]
-    
+        session_string = StringSession.generate()
+        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s)", (session_string,))
+        conn.commit()
     cur.close()
     conn.close()
-    
-    return session_string if not new_session_string else None
+    return session_string  # Return the string, not the StringSession object
 
 def store_scraped_news(channel_name, message_id, date, text, image_url):
     conn = get_db_connection()
@@ -187,4 +178,4 @@ def get_or_create_session():
         conn.commit()
     cur.close()
     conn.close()
-    return StringSession(session_string)
+    return session_string  # Return the string, not the StringSession object

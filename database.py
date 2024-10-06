@@ -120,20 +120,35 @@ def get_news_for_user(user_id):
     conn.close()
     return news
 
-def get_or_create_session():
+def get_or_create_scraper_session():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
+    cur.execute("SELECT session_string FROM telethon_session WHERE id IN (1, 2) ORDER BY id LIMIT 1")
     result = cur.fetchone()
     if result:
         session_string = result[0]
     else:
         session_string = StringSession.generate()
-        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s)", (session_string,))
+        cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (1, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (session_string,))
         conn.commit()
     cur.close()
     conn.close()
-    return session_string  # Return the string, not the StringSession object
+    return session_string
+
+def get_or_create_bot_session():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT session_string FROM telethon_session WHERE id = 3")
+    result = cur.fetchone()
+    if result:
+        session_string = result[0]
+    else:
+        session_string = StringSession.generate()
+        cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (3, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (session_string,))
+        conn.commit()
+    cur.close()
+    conn.close()
+    return session_string
 
 def store_scraped_news(channel_name, message_id, date, text, image_url):
     conn = get_db_connection()
@@ -164,18 +179,3 @@ def get_all_channels():
     cur.close()
     conn.close()
     return channels
-
-def get_or_create_session():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT session_string FROM telethon_session LIMIT 1")
-    result = cur.fetchone()
-    if result:
-        session_string = result[0]
-    else:
-        session_string = StringSession.generate()
-        cur.execute("INSERT INTO telethon_session (session_string) VALUES (%s)", (session_string,))
-        conn.commit()
-    cur.close()
-    conn.close()
-    return session_string  # Return the string, not the StringSession object

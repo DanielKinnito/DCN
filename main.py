@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-from database import create_tables, get_news_for_channels, get_all_channels, get_or_create_session
+from database import create_tables, get_news_for_channels, get_all_channels, get_or_create_bot_session
 import asyncio
 
 load_dotenv()
@@ -13,10 +13,11 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 async def main():
     create_tables()
-    print("Retrieving session from database...")
-    session_string = get_or_create_session()  # This is no longer an async call
+    print("Retrieving bot session from database...")
+    session_string = get_or_create_bot_session()
     client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
 
+    print("Starting bot...")
     await client.start(bot_token=BOT_TOKEN)
     print("Bot started successfully")
 

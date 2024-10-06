@@ -1,6 +1,7 @@
 import os
 import psycopg2
 from psycopg2.extras import execute_values
+from telethon.sessions import StringSession
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 SCRAPE_LIMIT = 100  # Define SCRAPE_LIMIT here

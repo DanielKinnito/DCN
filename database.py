@@ -60,6 +60,14 @@ def create_tables():
     cur.close()
     conn.close()
 
+def clear_scraped_news():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM scraped_news")
+    conn.commit()
+    cur.close()
+    conn.close()
+
 def get_all_news_channels():
     conn = get_db_connection()
     cur = conn.cursor()

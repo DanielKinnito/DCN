@@ -1,7 +1,7 @@
 import os
 from telethon import TelegramClient, events, functions, types
 from telethon.tl.functions.messages import GetHistoryRequest
-from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest, JoinChannelRequest
+from telethon.tl.functions.channels import CreateChannelRequest, JoinChannelRequest
 from telethon.sessions import StringSession
 from dotenv import load_dotenv
 import asyncio

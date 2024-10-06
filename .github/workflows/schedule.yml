@@ -3,6 +3,7 @@ name: Run Telegram Scraper
 on:
   schedule:
     - cron: '50 12,18 * * *'  # Runs at 12:50 PM and 6:50 PM UTC daily
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   run-scraper:

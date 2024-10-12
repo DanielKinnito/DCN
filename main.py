@@ -13,6 +13,7 @@ async def main():
     create_tables()
     print("Retrieving bot session from database...")
     session_string = get_or_create_bot_session()
+    
     client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
 
     print("Starting bot...")

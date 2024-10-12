@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 from telethon.sessions import StringSession
 import secrets
+from telethon import TelegramClient
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 SCRAPE_LIMIT = 100  # Define SCRAPE_LIMIT here
@@ -141,12 +142,23 @@ def get_or_create_bot_session():
     cur = conn.cursor()
     cur.execute("SELECT session_string FROM telethon_session WHERE id = 3")
     result = cur.fetchone()
-    if result:
+    if result and result[0]:
         session_string = result[0]
     else:
-        session_string = StringSession.generate()
+        # Generate a new session string
+        api_id = os.getenv('API_ID')
+        api_hash = os.getenv('API_HASH')
+        bot_token = os.getenv('BOT_TOKEN')
+        
+        # Create a new StringSession
+        with TelegramClient(StringSession(), api_id, api_hash) as client:
+            client.start(bot_token=bot_token)
+            session_string = client.session.save()
+        
+        # Store the new session string
         cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (3, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (session_string,))
         conn.commit()
+    
     cur.close()
     conn.close()
     return session_string

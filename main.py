@@ -14,11 +14,18 @@ async def main():
     print("Retrieving bot session from database...")
     session_string = get_or_create_bot_session()
     
-    client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
-
-    print("Starting bot...")
-    await client.start(bot_token=BOT_TOKEN)
-    print("Bot started successfully")
+    try:
+        client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
+        print("Starting bot...")
+        await client.start(bot_token=BOT_TOKEN)
+        print("Bot started successfully")
+    except Exception as e:
+        print(f"Error starting the bot: {str(e)}")
+        print("Attempting to create a new session...")
+        new_session = StringSession.generate()
+        client = TelegramClient(new_session, API_ID, API_HASH)
+        await client.start(bot_token=BOT_TOKEN)
+        print("Bot started with a new session")
 
     @client.on(events.NewMessage(pattern='/start'))
     async def start_handler(event):

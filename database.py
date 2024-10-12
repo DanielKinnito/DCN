@@ -2,6 +2,7 @@ import os
 import psycopg2
 from psycopg2.extras import execute_values
 from telethon.sessions import StringSession
+import secrets
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 SCRAPE_LIMIT = 100  # Define SCRAPE_LIMIT here
@@ -143,12 +144,12 @@ def get_or_create_bot_session():
     if result:
         session_string = result[0]
     else:
-        session_string = StringSession.generate()
+        session_string = secrets.token_hex(32)
         cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (3, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (session_string,))
         conn.commit()
     cur.close()
     conn.close()
-    return session_string
+    return StringSession(session_string)
 
 def store_scraped_news(channel_name, message_id, date, text, image_url):
     conn = get_db_connection()

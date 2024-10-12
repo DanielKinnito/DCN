@@ -15,7 +15,7 @@ API_HASH = os.getenv('API_HASH')
 PHONE_NUMBER = os.getenv('PHONE_NUMBER')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-AGGREGATOR_CHANNEL_NAME = "My News Aggregator"
+AGGREGATOR_CHANNEL_INVITE = "https://t.me/+jHTdGWaAcok3ODhk"
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -38,11 +38,11 @@ async def get_session_from_database():
 
 async def get_aggregator_channel(client):
     try:
-        channel = await client.get_entity(AGGREGATOR_CHANNEL_NAME)
-        print(f"Channel {AGGREGATOR_CHANNEL_NAME} found.")
-        return channel
-    except ValueError:
-        print(f"Channel {AGGREGATOR_CHANNEL_NAME} not found. Please create it manually and add the bot as an admin.")
+        channel = await client(JoinChannelRequest(AGGREGATOR_CHANNEL_INVITE))
+        print(f"Successfully joined the aggregator channel.")
+        return channel.chats[0]
+    except Exception as e:
+        print(f"Error joining the aggregator channel: {str(e)}")
         return None
 
 async def ensure_joined_channels(client, channels):
@@ -104,7 +104,7 @@ async def main():
         await forward_messages_to_aggregator(client, aggregator_channel, channels)
         await scrape_aggregator_channel(client, aggregator_channel)
     else:
-        print("Aggregator channel not found. Exiting.")
+        print("Failed to join the aggregator channel. Exiting.")
 
     await client.disconnect()
 

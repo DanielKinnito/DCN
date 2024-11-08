@@ -147,17 +147,17 @@ def get_or_create_bot_session():
         try:
             # Try to decode the stored string
             session_string = base64.b64decode(result[0]).decode('utf-8')
-        except:
+        except UnicodeDecodeError:
             # If decoding fails, generate a new session
             print("Failed to decode existing session. Generating a new one.")
-            session_string = StringSession.generate()
+            session_string = StringSession().save()
             # Encode the new session string to base64 for storage
             encoded_session = base64.b64encode(session_string.encode('utf-8')).decode('utf-8')
             cur.execute("UPDATE telethon_session SET session_string = %s WHERE id = 3", (encoded_session,))
             conn.commit()
     else:
         # Generate a new session string
-        session_string = StringSession.generate()
+        session_string = StringSession().save()
         # Encode the session string to base64 for storage
         encoded_session = base64.b64encode(session_string.encode('utf-8')).decode('utf-8')
         cur.execute("INSERT INTO telethon_session (id, session_string) VALUES (3, %s) ON CONFLICT (id) DO UPDATE SET session_string = EXCLUDED.session_string", (encoded_session,))

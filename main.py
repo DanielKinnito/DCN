@@ -22,8 +22,8 @@ async def main():
     except Exception as e:
         print(f"Error starting the bot: {str(e)}")
         print("Attempting to create a new session...")
-        new_session = StringSession.generate()
-        client = TelegramClient(new_session, API_ID, API_HASH)
+        new_session = StringSession().save()
+        client = TelegramClient(StringSession(new_session), API_ID, API_HASH)
         await client.start(bot_token=BOT_TOKEN)
         print("Bot started with a new session")
 
